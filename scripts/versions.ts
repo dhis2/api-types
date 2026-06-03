@@ -8,7 +8,6 @@
 export const VERSIONS = [
   {
     version: "v40",
-    // DHIS2 Play server for version 40. Replace if a stable instance is available.
     url: "https://play.im.dhis2.org/stable-2-40-11/api/openapi.json",
   },
   {
@@ -18,6 +17,10 @@ export const VERSIONS = [
   {
     version: "v42",
     url: "https://play.im.dhis2.org/stable-2-42-4-1/api/openapi.json",
+  },
+  {
+    version: "v43",
+    url: "https://play.im.dhis2.org/stable-2-43-0/api/openapi.json",
   },
 ] as const;
 

@@ -2,7 +2,7 @@
 
 TypeScript types for the DHIS2 REST API, generated from the official OpenAPI specification.
 
-Covers the last three supported DHIS2 API versions: **v40**, **v41**, **v42**.
+Covers the last four supported DHIS2 API versions: **v40**, **v41**, **v42**, **v43**.
 
 ## Installation
 
@@ -47,17 +47,18 @@ const { data } = await client.GET("/dataElements", {
 | `@dhis2/api-types/v40` | DHIS2 2.40    |
 | `@dhis2/api-types/v41` | DHIS2 2.41    |
 | `@dhis2/api-types/v42` | DHIS2 2.42    |
+| `@dhis2/api-types/v43` | DHIS2 2.43    |
 
 ## Versioning
 
-The package major version tracks the latest included DHIS2 API version. When DHIS2 v43 ships:
-- `v43` is added, `v40` is dropped
-- Package version bumps to `43.x.y`
+The package major version tracks the latest included DHIS2 API version. When DHIS2 v44 ships:
+- `v44` is added, `v40` is dropped
+- Package version bumps to `44.x.y`
 
 Pin to a major version to avoid unexpected API version drops:
 
 ```json
-"@dhis2/api-types": "^42.0.0"
+"@dhis2/api-types": "^43.0.0"
 ```
 
 ## Maintaining this package

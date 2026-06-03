@@ -28,7 +28,7 @@ jobs:
             # Verify the generated types are present and up to date
             - name: Check generated types exist
               run: |
-                  for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts; do
+                  for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts src/v43.d.ts; do
                     if [ ! -f "$f" ]; then
                       echo "Missing: $f — run 'npm run update' and commit before tagging"
                       exit 1

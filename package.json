@@ -1,6 +1,6 @@
 {
     "name": "@dhis2/api-types",
-    "version": "42.0.0",
+    "version": "43.0.0",
     "description": "TypeScript types for the DHIS2 REST API, generated from the OpenAPI specification",
     "type": "module",
     "license": "BSD-2-Clause",
@@ -17,6 +17,9 @@
         },
         "./v42": {
             "types": "./src/v42.d.ts"
+        },
+        "./v43": {
+            "types": "./src/v43.d.ts"
         }
     },
     "typesVersions": {
@@ -29,6 +32,9 @@
             ],
             "v42": [
                 "./src/v42.d.ts"
+            ],
+            "v43": [
+                "./src/v43.d.ts"
             ]
         }
     },
