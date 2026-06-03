@@ -12,9 +12,13 @@ npm install --save-dev @dhis2/api-types
 
 ## Usage
 
-Import types from the version matching your DHIS2 instance:
+Import from the root for the latest API version, or pin to a specific version:
 
 ```ts
+// Always resolves to the latest supported version (currently v43)
+import type { components, paths } from "@dhis2/api-types"
+
+// Or pin to a specific DHIS2 version
 import type { components, paths } from "@dhis2/api-types/v42"
 
 // Named schema types
@@ -31,7 +35,7 @@ Pair with [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for fully typ
 
 ```ts
 import createClient from "openapi-fetch"
-import type { paths } from "@dhis2/api-types/v42"
+import type { paths } from "@dhis2/api-types"
 
 const client = createClient<paths>({ baseUrl: "https://play.dhis2.org/api" })
 
@@ -42,12 +46,13 @@ const { data } = await client.GET("/dataElements", {
 
 ## Available versions
 
-| Import path          | DHIS2 version |
-| -------------------- | ------------- |
-| `@dhis2/api-types/v40` | DHIS2 2.40    |
-| `@dhis2/api-types/v41` | DHIS2 2.41    |
-| `@dhis2/api-types/v42` | DHIS2 2.42    |
-| `@dhis2/api-types/v43` | DHIS2 2.43    |
+| Import path            | DHIS2 version          |
+| ---------------------- | ---------------------- |
+| `@dhis2/api-types`     | DHIS2 2.43 (latest)    |
+| `@dhis2/api-types/v43` | DHIS2 2.43             |
+| `@dhis2/api-types/v42` | DHIS2 2.42             |
+| `@dhis2/api-types/v41` | DHIS2 2.41             |
+| `@dhis2/api-types/v40` | DHIS2 2.40             |
 
 ## Versioning
 
@@ -95,7 +100,7 @@ npm run generate -- --version v42
 4. Push a `v*` tag — the publish workflow handles the rest
 
 ```sh
-git tag v42.1.0 && git push origin v42.1.0
+git tag v43.1.0 && git push origin v43.1.0
 ```
 
 The regenerate workflow also runs monthly on a schedule and opens a PR automatically
@@ -104,7 +109,7 @@ if any specs have changed.
 ### Adding a new DHIS2 API version
 
 1. Add an entry to `scripts/versions.ts`
-2. Add the matching entry to `package.json` exports and `typesVersions`
-3. Remove the oldest version entry from both
+2. Add the new version to `package.json` exports and `typesVersions`; remove the oldest
+3. Update `src/latest.d.ts` to re-export the new version
 4. Update the publish workflow's type check list
 5. Run `npm run update`
