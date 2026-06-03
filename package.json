@@ -1,0 +1,50 @@
+{
+    "name": "@dhis2/api-types",
+    "version": "42.0.0",
+    "description": "TypeScript types for the DHIS2 REST API, generated from the OpenAPI specification",
+    "type": "module",
+    "license": "BSD-2-Clause",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dhis2/dhis2-api-types.git"
+    },
+    "exports": {
+        "./v40": {
+            "types": "./src/v40.d.ts"
+        },
+        "./v41": {
+            "types": "./src/v41.d.ts"
+        },
+        "./v42": {
+            "types": "./src/v42.d.ts"
+        }
+    },
+    "typesVersions": {
+        "*": {
+            "v40": [
+                "./src/v40.d.ts"
+            ],
+            "v41": [
+                "./src/v41.d.ts"
+            ],
+            "v42": [
+                "./src/v42.d.ts"
+            ]
+        }
+    },
+    "files": [
+        "src"
+    ],
+    "scripts": {
+        "fetch-specs": "tsx scripts/fetch-specs.ts",
+        "generate": "tsx scripts/generate.ts",
+        "update": "npm run fetch-specs && npm run generate",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@types/node": "^25.9.1",
+        "openapi-typescript": "^7.6.1",
+        "tsx": "^4.19.4",
+        "typescript": "^5.8.3"
+    }
+}

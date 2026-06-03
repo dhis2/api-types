@@ -1,0 +1,81 @@
+name: Regenerate types
+
+on:
+    # Run on the 1st of each month to catch spec drift
+    schedule:
+        - cron: "0 6 1 * *"
+    # Allow manual runs from the Actions tab
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "API version to regenerate (leave blank for all)"
+                required: false
+                type: string
+            force:
+                description: "Force re-fetch specs even if cached"
+                required: false
+                type: boolean
+                default: false
+
+jobs:
+    regenerate:
+        name: Fetch specs and regenerate types
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - run: npm ci
+
+            - name: Fetch OpenAPI specs
+              env:
+                  DHIS2_USERNAME: ${{ secrets.DHIS2_USERNAME }}
+                  DHIS2_PASSWORD: ${{ secrets.DHIS2_PASSWORD }}
+              run: |
+                  ARGS=""
+                  if [ "${{ inputs.version }}" != "" ]; then
+                    ARGS="$ARGS --version ${{ inputs.version }}"
+                  fi
+                  if [ "${{ inputs.force }}" == "true" ]; then
+                    ARGS="$ARGS --force"
+                  fi
+                  npm run fetch-specs -- $ARGS
+
+            - name: Generate TypeScript types
+              run: |
+                  ARGS=""
+                  if [ "${{ inputs.version }}" != "" ]; then
+                    ARGS="$ARGS --version ${{ inputs.version }}"
+                  fi
+                  npm run generate -- $ARGS
+
+            - name: Check for changes
+              id: changes
+              run: |
+                  if git diff --quiet; then
+                    echo "changed=false" >> $GITHUB_OUTPUT
+                  else
+                    echo "changed=true" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: Open pull request with updated types
+              if: steps.changes.outputs.changed == 'true'
+              uses: peter-evans/create-pull-request@v7
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: regenerate/api-types
+                  commit-message: "chore: regenerate types from latest OpenAPI specs"
+                  title: "chore: regenerate types from latest OpenAPI specs"
+                  body: |
+                      Automated regeneration of TypeScript types from the DHIS2 OpenAPI specs.
+
+                      **What changed**: Review the diff in `specs/` and `src/` to see API changes.
+
+                      If any types changed, review them carefully before merging — this will affect
+                      downstream consumers. Bump the package version as appropriate.
+                  labels: "automated,types"

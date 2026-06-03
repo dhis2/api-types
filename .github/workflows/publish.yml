@@ -1,0 +1,43 @@
+name: Publish to npm
+
+on:
+    push:
+        tags:
+            - "v*"
+
+jobs:
+    publish:
+        name: Publish @dhis2/api-types
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            id-token: write # for npm provenance
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+                  registry-url: https://registry.npmjs.org
+
+            - run: npm ci
+
+            # Verify the generated types are present and up to date
+            - name: Check generated types exist
+              run: |
+                  for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts; do
+                    if [ ! -f "$f" ]; then
+                      echo "Missing: $f — run 'npm run update' and commit before tagging"
+                      exit 1
+                    fi
+                  done
+
+            - run: npm run typecheck
+
+            - name: Publish
+              run: npm publish --access public --provenance
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
