@@ -54,11 +54,19 @@ for (const { version } of targets) {
             .replace(/"#\/components\/parameters\/GetObjectListParams\.orders"/g, '"#/components/parameters/GetObjectListParams.order"')
         const spec = JSON.parse(specRaw)
         const ast = await openapiTS(spec)
+
+        const schemaNames = Object.keys(spec.components?.schemas ?? {})
+        const aliases = schemaNames
+            .map((name) => `export type ${name} = components["schemas"]["${name}"]`)
+            .join("\n")
+
         const output = [
             `// Generated from DHIS2 OpenAPI spec — do not edit manually.`,
             `// Re-generate with: npm run generate`,
             ``,
             astToString(ast),
+            `// Named aliases for every schema — import directly instead of via components["schemas"]`,
+            aliases,
         ].join("\n")
 
         writeFileSync(outPath, output)

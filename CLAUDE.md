@@ -7,6 +7,7 @@
 ## Key design decisions
 
 - Types are generated directly from the OpenAPI spec without resolving `$ref` references. Nested objects are typed as their spec-declared shape (e.g. `IdentifiableObject`), not the concrete type they point to. This is intentional — see [ADR 0001](docs/adr/0001-openapi-generated-types-over-resolved-types.md).
+- Every schema in the spec is exported as a named type alias from the version entry point (e.g. `export type DataElement = components["schemas"]["DataElement"]`). These are generated automatically by `generate.ts` and appended to each `vN.d.ts` file. See [ADR 0003](docs/adr/0003-named-schema-type-aliases.md).
 - The last **four** DHIS2 API versions are supported at any time (currently v40–v43).
 - The root export `@dhis2/api-types` always resolves to the latest version via `src/latest.d.ts`.
 - `@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, and `Prettify<T>` — version-agnostic utility types. `src/utils.d.ts` is hand-written and must not be regenerated. See [ADR 0002](docs/adr/0002-utility-types-gistmodel-and-pickwithfieldfilters.md) for why only these three are included.
@@ -81,7 +82,7 @@ scripts/
 specs/
   vN.json            # OpenAPI spec snapshots (committed)
 src/
-  vN.d.ts            # generated type declarations — do not edit
+  vN.d.ts            # generated: openapi-typescript output + named schema aliases — do not edit
   latest.d.ts        # re-exports the latest version; update when adding a new version
   utils.d.ts         # hand-written utility types — version-agnostic generics, do not regenerate
 tests/

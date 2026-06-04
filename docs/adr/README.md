@@ -7,3 +7,4 @@ This directory contains ADRs for `@dhis2/api-types`, following the
 |----|-------|--------|
 | [ADR-0001](0001-openapi-generated-types-over-resolved-types.md) | Use OpenAPI-generated types over hand-written or resolved types | Accepted |
 | [ADR-0002](0002-utility-types-gistmodel-and-pickwithfieldfilters.md) | Ship GistModel and PickWithFieldFilters utility types; omit the rest | Accepted |
+| [ADR-0003](0003-named-schema-type-aliases.md) | Generate named schema type aliases alongside the namespace output | Accepted |

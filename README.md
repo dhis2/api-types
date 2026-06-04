@@ -12,20 +12,20 @@ npm install --save-dev @dhis2/api-types
 
 ## Usage
 
-Import from the root for the latest API version, or pin to a specific version:
+Import types directly by name, or use the `components["schemas"]` namespace:
 
 ```ts
-// Always resolves to the latest supported version (currently v43)
+// Named imports — every schema in the spec is exported directly
+import type { DataElement, OrganisationUnit, ValueType } from "@dhis2/api-types"
+
+// Namespace imports — useful when you need paths/operations types too
 import type { components, paths } from "@dhis2/api-types"
+type DataElement = components["schemas"]["DataElement"]  // identical to the named import
 
-// Or pin to a specific DHIS2 version
-import type { components, paths } from "@dhis2/api-types/v42"
+// Pin to a specific DHIS2 version (default resolves to latest, currently v43)
+import type { DataElement } from "@dhis2/api-types/v42"
 
-// Named schema types
-type DataElement = components["schemas"]["DataElement"]
-type OrganisationUnit = components["schemas"]["OrganisationUnit"]
-
-// Endpoint request/response types
+// Endpoint request/response types (only available via namespace)
 type GetDataElementsParams = paths["/dataElements"]["get"]["parameters"]
 type DataElementResponse =
     paths["/dataElements"]["get"]["responses"][200]["content"]["application/json"]
@@ -35,7 +35,7 @@ Pair with [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for fully typ
 
 ```ts
 import createClient from "openapi-fetch"
-import type { paths } from "@dhis2/api-types"
+import type { paths } from "@dhis2/api-types"  // paths is only in the namespace import
 
 const client = createClient<paths>({ baseUrl: "https://play.dhis2.org/api" })
 
