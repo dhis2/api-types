@@ -44,6 +44,58 @@ const { data } = await client.GET("/dataElements", {
 })
 ```
 
+## Utility types
+
+Import from `@dhis2/api-types/utils` for version-agnostic helpers that work with any version's schemas.
+
+### `GistModel<T>`
+
+Types a response from DHIS2's `/api/*.json?type=gist` endpoint, which reduces payload size by collapsing the response:
+- **Array fields** (collections) → `number` (the total count)
+- **Object fields** (references and embedded objects) → `string` (the href or serialised value)
+- **Scalar fields** (string, number, boolean, enums) → unchanged
+
+```ts
+import type { components } from "@dhis2/api-types/v43"
+import type { GistModel } from "@dhis2/api-types/utils"
+
+type DataElement = components["schemas"]["DataElement"]
+type DataElementGist = GistModel<DataElement>
+
+// dataElementGroups: BaseIdentifiableObject[]  →  number  (count)
+// categoryCombo:     IdentifiableObject        →  string  (href)
+// name:              string                    →  string  (unchanged)
+// aggregationType:   AggregationType           →  AggregationType  (enum preserved)
+```
+
+### `PickWithFieldFilters<T, Filters>`
+
+Narrows a model type to exactly the fields requested in a `?fields=` query, including nested fields using bracket notation. Each entry in the array is one top-level field specifier.
+
+```ts
+import type { components } from "@dhis2/api-types/v43"
+import type { PickWithFieldFilters } from "@dhis2/api-types/utils"
+
+type DataElement = components["schemas"]["DataElement"]
+
+// Flat pick — mirrors ?fields=id,name,valueType
+type DEFlat = PickWithFieldFilters<DataElement, ["id", "name", "valueType"]>
+// → { id?: string; name?: string; valueType?: ValueType }
+
+// Nested pick — mirrors ?fields=id,categoryCombo[id,name]
+type DEWithCombo = PickWithFieldFilters<DataElement, ["id", "categoryCombo[id,name]"]>
+// → { id?: string; categoryCombo?: { id?: string; name?: string } }
+
+// Array field nested pick — mirrors ?fields=status,dataValues[dataElement,value]
+type EventPick = PickWithFieldFilters<
+    components["schemas"]["Event"],
+    ["status", "dataValues[dataElement,value]"]
+>
+// → { status: EventStatus; dataValues?: Array<{ dataElement?: string; value?: string }> }
+```
+
+> **Note:** Nested picks only resolve fields that exist on the declared type. Reference fields like `categoryCombo` are typed as `IdentifiableObject` (with `id`, `name`, `code`, etc.), not the full concrete type. Deeper fields unavailable on `IdentifiableObject` (e.g. `categories` within a `CategoryCombo`) are silently dropped. See [ADR 0001](docs/adr/0001-openapi-generated-types-over-resolved-types.md) for background.
+
 ## Available versions
 
 | Import path            | DHIS2 version          |

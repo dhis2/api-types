@@ -9,6 +9,7 @@
 - Types are generated directly from the OpenAPI spec without resolving `$ref` references. Nested objects are typed as their spec-declared shape (e.g. `IdentifiableObject`), not the concrete type they point to. This is intentional — see [ADR 0001](docs/adr/0001-openapi-generated-types-over-resolved-types.md).
 - The last **four** DHIS2 API versions are supported at any time (currently v40–v43).
 - The root export `@dhis2/api-types` always resolves to the latest version via `src/latest.d.ts`.
+- `@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, and `Prettify<T>` — version-agnostic utility types. `src/utils.d.ts` is hand-written and must not be regenerated. See [ADR 0002](docs/adr/0002-utility-types-gistmodel-and-pickwithfieldfilters.md) for why only these three are included.
 
 ## Versions
 
@@ -82,10 +83,14 @@ specs/
 src/
   vN.d.ts            # generated type declarations — do not edit
   latest.d.ts        # re-exports the latest version; update when adding a new version
+  utils.d.ts         # hand-written utility types — version-agnostic generics, do not regenerate
 tests/
+  v40/
+    utils.ts         # verifies GistModel + PickWithFieldFilters compile against v40 types
   v43/
     data-element.ts  # type tests for aggregate metadata (DataElement)
     tracker.ts       # type tests for tracker models
+    utils.ts         # type tests for GistModel and PickWithFieldFilters
 docs/
   adr/               # Architecture Decision Records (MADR format)
 .github/
@@ -94,10 +99,24 @@ docs/
     regenerate.yml   # monthly cron: re-fetches specs and opens a PR if anything changed
 ```
 
+## Utility types (`src/utils.d.ts`)
+
+`@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, and `Prettify<T>`. These are version-agnostic generics — a single export that works with types from any version:
+
+```ts
+import type { components } from "@dhis2/api-types/v40"  // or v41, v42, v43
+import type { GistModel } from "@dhis2/api-types/utils"
+
+type DEGist = GistModel<components["schemas"]["DataElement"]>
+```
+
+`src/utils.d.ts` is hand-written. Do not regenerate or overwrite it as part of `npm run generate`. It should be updated manually when the utility types need to change.
+
 ## Adding type tests for a new version
 
 When adding v44, create `tests/v44/` with at least:
 - `data-element.ts` — test an aggregate metadata type
 - `tracker.ts` — test the tracker event/enrollment types
+- `utils.ts` — verify `GistModel` and `PickWithFieldFilters` compile against the new version's types
 
 Also add the new version path to `tsconfig.tests.json`'s `paths` map.

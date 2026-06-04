@@ -9,8 +9,11 @@
         "baseUrl": ".",
         "paths": {
             "@dhis2/api-types": ["./src/latest.d.ts"],
+            "@dhis2/api-types/v40": ["./src/v40.d.ts"],
+            "@dhis2/api-types/v41": ["./src/v41.d.ts"],
+            "@dhis2/api-types/v42": ["./src/v42.d.ts"],
             "@dhis2/api-types/v43": ["./src/v43.d.ts"],
-            "@dhis2/api-types/v42": ["./src/v42.d.ts"]
+            "@dhis2/api-types/utils": ["./src/utils.d.ts"]
         }
     },
     "include": ["tests/**/*.ts"]

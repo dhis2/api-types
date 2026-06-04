@@ -24,6 +24,9 @@
         },
         "./v43": {
             "types": "./src/v43.d.ts"
+        },
+        "./utils": {
+            "types": "./src/utils.d.ts"
         }
     },
     "typesVersions": {
@@ -39,6 +42,9 @@
             ],
             "v43": [
                 "./src/v43.d.ts"
+            ],
+            "utils": [
+                "./src/utils.d.ts"
             ]
         }
     },
