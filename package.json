@@ -49,7 +49,7 @@
         "fetch-specs": "tsx scripts/fetch-specs.ts",
         "generate": "tsx scripts/generate.ts",
         "update": "npm run fetch-specs && npm run generate",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.tests.json"
     },
     "devDependencies": {
         "@types/node": "^25.9.1",
