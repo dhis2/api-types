@@ -144,15 +144,53 @@ npm run fetch-specs -- --version v42 --force
 npm run generate -- --version v42
 ```
 
-### Releasing a new version
+### Publishing
+
+The publish workflow runs on two triggers, intentionally different:
+
+**Stable releases — tag-based, manual.**
+Pushing a `v*` tag from any branch publishes to the `latest` dist-tag on npm. The version in `package.json` is used as-is. This requires a deliberate action, which is the point — stable releases affect everyone who runs `npm install @dhis2/api-types` and should never happen by accident.
+
+```sh
+# Bump the version, commit, then tag and push
+npm version patch          # or minor / major
+git push && git push --tags
+```
+
+**Prerelease channels — branch-based, automatic.**
+Any push to the `beta` or `alpha` branches immediately publishes to the matching dist-tag on npm. The version is auto-generated as `{base}-{channel}.{short-sha}` (e.g. `43.0.0-beta.abc1f3a`) so every commit produces a unique, traceable package version without any manual version management.
+
+```sh
+# Make changes on the beta branch — publishing is automatic on push
+git checkout beta
+git merge my-feature-branch
+git push
+# → publishes 43.0.0-beta.abc1f3a to npm@beta
+```
+
+Consumers opt into a channel explicitly:
+
+```sh
+npm install @dhis2/api-types          # stable, unaffected by prerelease activity
+npm install @dhis2/api-types@beta     # latest beta build
+npm install @dhis2/api-types@alpha    # latest alpha build
+```
+
+**Why this split is a good compromise.**
+Stable releases carry real weight — a bad publish to `latest` breaks every downstream project that runs `npm install`. Tag-based publishing forces a deliberate decision: someone has to run `git tag`, review what they're shipping, and push the tag intentionally. That friction is a feature, not a bug.
+
+Prerelease channels are the opposite: speed and low ceremony matter more than caution. A branch-based trigger means merging a PR to `beta` is all it takes to make types available for integration testing — no context-switching to create a tag, no deciding on a prerelease version number. The SHA-stamped version also means you can always trace a `@beta` install back to the exact commit it came from.
+
+The result: `latest` stays stable and trustworthy, while `beta` and `alpha` move fast and stay current with in-progress work.
+
+### Releasing a new stable version
 
 1. Run `npm run update` and review the diff in `specs/` and `src/`
 2. Bump the version in `package.json` (`npm version patch|minor|major`)
-3. Commit and push
-4. Push a `v*` tag — the publish workflow handles the rest
+3. Commit, push, then tag:
 
 ```sh
-git tag v43.1.0 && git push origin v43.1.0
+git push && git push --tags
 ```
 
 The regenerate workflow also runs monthly on a schedule and opens a PR automatically
