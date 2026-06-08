@@ -1,74 +1,74 @@
 name: Publish to npm
 
 on:
-    push:
-        # Stable releases: push a vN.N.N tag from any branch
-        tags:
-            - "v*"
-        # Prerelease channels: push to beta or alpha branch for continuous delivery
-        branches:
-            - beta
-            - alpha
+  push:
+    # Stable releases: push a vN.N.N tag from any branch
+    tags:
+      - "v*"
+    # Prerelease channels: push to beta or alpha branch for continuous delivery
+    branches:
+      - beta
+      - alpha
 
 jobs:
-    publish:
-        name: Publish @dhis2/api-types
-        runs-on: ubuntu-latest
+  publish:
+    name: Publish @dhis2/api-types
+    runs-on: ubuntu-latest
 
-        permissions:
-            contents: read
-            id-token: write # for npm provenance
+    permissions:
+      contents: read
+      id-token: write # for npm provenance
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-                  cache: npm
-                  registry-url: https://registry.npmjs.org
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
 
-            - run: npm ci
+      - run: npm ci
 
-            # Verify the generated types are present and up to date
-            - name: Check generated types exist
-              run: |
-                  for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts src/v43.d.ts; do
-                    if [ ! -f "$f" ]; then
-                      echo "Missing: $f — run 'npm run update' and commit before tagging"
-                      exit 1
-                    fi
-                  done
+      # Verify the generated types are present and up to date
+      - name: Check generated types exist
+        run: |
+          for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts src/v43.d.ts; do
+            if [ ! -f "$f" ]; then
+              echo "Missing: $f — run 'npm run update' and commit before tagging"
+              exit 1
+            fi
+          done
 
-            - run: npm run typecheck
+      - run: npm run typecheck
 
-            - name: Resolve dist-tag and version
-              id: release
-              run: |
-                  BASE=$(node -p "require('./package.json').version")
-                  SHA=$(git rev-parse --short HEAD)
-                  REF="${GITHUB_REF_NAME}"
+      - name: Resolve dist-tag and version
+        id: release
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          SHA=$(git rev-parse --short HEAD)
+          REF="${GITHUB_REF_NAME}"
 
-                  if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-                    # Branch push (beta / alpha): auto-version with short SHA for traceability
-                    echo "version=${BASE}-${REF}.${SHA}" >> $GITHUB_OUTPUT
-                    echo "tag=${REF}" >> $GITHUB_OUTPUT
-                  elif [[ "$REF" == *"-"* ]]; then
-                    # Prerelease tag: v43.1.0-beta.1 → dist-tag beta
-                    DIST_TAG=$(echo "$REF" | sed 's/.*-\([a-zA-Z]*\).*/\1/')
-                    echo "version=${BASE}" >> $GITHUB_OUTPUT
-                    echo "tag=${DIST_TAG}" >> $GITHUB_OUTPUT
-                  else
-                    # Stable tag: v43.1.0 → dist-tag latest
-                    echo "version=${BASE}" >> $GITHUB_OUTPUT
-                    echo "tag=latest" >> $GITHUB_OUTPUT
-                  fi
+          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+            # Branch push (beta / alpha): auto-version with short SHA for traceability
+            echo "version=${BASE}-${REF}.${SHA}" >> $GITHUB_OUTPUT
+            echo "tag=${REF}" >> $GITHUB_OUTPUT
+          elif [[ "$REF" == *"-"* ]]; then
+            # Prerelease tag: v43.1.0-beta.1 → dist-tag beta
+            DIST_TAG=$(echo "$REF" | sed 's/.*-\([a-zA-Z]*\).*/\1/')
+            echo "version=${BASE}" >> $GITHUB_OUTPUT
+            echo "tag=${DIST_TAG}" >> $GITHUB_OUTPUT
+          else
+            # Stable tag: v43.1.0 → dist-tag latest
+            echo "version=${BASE}" >> $GITHUB_OUTPUT
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
 
-            - name: Stamp prerelease version
-              if: steps.release.outputs.tag != 'latest'
-              run: npm version ${{ steps.release.outputs.version }} --no-git-tag-version
+      - name: Stamp prerelease version
+        if: steps.release.outputs.tag != 'latest'
+        run: npm version ${{ steps.release.outputs.version }} --no-git-tag-version
 
-            - name: Publish
-              run: npm publish --access public --provenance --tag ${{ steps.release.outputs.tag }}
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish
+        run: npm publish --access public --provenance --tag ${{ steps.release.outputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DHIS2_BOT_NPM_TOKEN }}
