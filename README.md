@@ -31,6 +31,71 @@ type DataElementResponse =
     paths["/dataElements"]["get"]["responses"][200]["content"]["application/json"]
 ```
 
+### Usage with `@dhis2/app-runtime`
+
+Type the response of `useDataQuery` by declaring your fields `as const` and passing them through `PickWithFieldFilters`. The same array drives both the TypeScript type and the `fields` query parameter, so they can never drift apart.
+
+```ts
+import { useDataQuery } from "@dhis2/app-runtime"
+import type { DataElement } from "@dhis2/api-types"
+import type { PickWithFieldFilters, PagedResponse } from "@dhis2/api-types/utils"
+
+// Declare fields once — used for both the type and the ?fields= param
+const DATA_ELEMENT_FIELDS = [
+    "id",
+    "name",
+    "valueType",
+    "domainType",
+    "categoryCombo[id,displayName]",
+] as const
+
+// Shape of a single data element in the response
+type DataElementRow = PickWithFieldFilters<DataElement, typeof DATA_ELEMENT_FIELDS>
+// → {
+//     id?: string
+//     name?: string
+//     valueType?: ValueType
+//     domainType?: DataElementDomain
+//     categoryCombo?: { id?: string; displayName?: string }
+//   }
+
+// Full query response — PagedResponse types the pager + resource array together
+type DataElementsQueryResult = {
+    dataElements: PagedResponse<DataElementRow, "dataElements">
+}
+// → {
+//     dataElements: {
+//         pager: { page: number; pageCount: number; total: number; pageSize: number }
+//         dataElements: DataElementRow[]
+//     }
+//   }
+
+const query = {
+    dataElements: {
+        resource: "dataElements",
+        params: { fields: DATA_ELEMENT_FIELDS.join(","), pageSize: 50 },
+    },
+}
+
+function DataElementList() {
+    const { data, loading, error } = useDataQuery<DataElementsQueryResult>(query)
+
+    if (loading) return <span>Loading...</span>
+    if (error) return <span>Error: {error.message}</span>
+
+    return (
+        <ul>
+            {data?.dataElements.dataElements.map((de) => (
+                // de.id, de.name, de.valueType, de.categoryCombo are all typed
+                <li key={de.id}>
+                    {de.name} — {de.valueType} ({de.categoryCombo?.displayName})
+                </li>
+            ))}
+        </ul>
+    )
+}
+```
+
 Pair with [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for fully type-safe API calls:
 
 ```ts
@@ -47,6 +112,23 @@ const { data } = await client.GET("/dataElements", {
 ## Utility types
 
 Import from `@dhis2/api-types/utils` for version-agnostic helpers that work with any version's schemas.
+
+### `PagedResponse<T, Key>`
+
+Types a paginated DHIS2 list endpoint response. All list endpoints return a `pager` object alongside the resource array, keyed by the resource name.
+
+```ts
+import type { DataElement } from "@dhis2/api-types"
+import type { PagedResponse } from "@dhis2/api-types/utils"
+
+type DataElementsPage = PagedResponse<DataElement, "dataElements">
+// → {
+//     pager: { page: number; pageCount: number; total: number; pageSize: number; prevPage?: string; nextPage?: string }
+//     dataElements: DataElement[]
+//   }
+```
+
+Combine with `PickWithFieldFilters` to narrow items to exactly the requested fields (see the `@dhis2/app-runtime` example above).
 
 ### `GistModel<T>`
 

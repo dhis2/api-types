@@ -1,4 +1,4 @@
-# Ship GistModel and PickWithFieldFilters utility types; omit the rest
+# Ship GistModel, PickWithFieldFilters, and PagedResponse utility types; omit the rest
 
 ## Status
 
@@ -39,19 +39,23 @@ The following were discovered in `metadata-management-app` (`dhis2-open-api-ts`)
 
 ## Considered Options
 
-- **Include `GistModel` and `PickWithFieldFilters`** — the two utilities with the most DHIS2-specific logic and the widest applicability
+- **Include `GistModel`, `PickWithFieldFilters`, and `PagedResponse`** — the three utilities with clear value and wide applicability
 - **Include all utilities found in the ecosystem** — maximum feature parity with existing app-local solutions
 - **Include none** — keep the library focused on raw types only
 
 ## Decision Outcome
 
-Chosen option: **Include `GistModel` and `PickWithFieldFilters` only**, because they encode meaningful DHIS2-specific knowledge, remain useful despite this library's `IdentifiableObject` reference style, and cannot be trivially built locally. `Prettify<T>` is also exported as a minor bonus — it is the smallest possible utility and directly supports reading the output of the other two.
+Chosen option: **Include `GistModel`, `PickWithFieldFilters`, and `PagedResponse`**, because all three address genuine DHIS2 API patterns and provide clear value to consumers. `Prettify<T>` is also exported as a minor bonus — it is the smallest possible utility and directly supports reading the output of the other utilities.
+
+- `GistModel` and `PickWithFieldFilters` encode non-trivial DHIS2-specific logic that cannot be trivially built locally
+- `PagedResponse` is structurally simple but earns its place as the universal return shape of every DHIS2 list endpoint — consumers encounter it in every paginated query, making it the single most frequently needed wrapper type
 
 ### Positive Consequences
 
-- Consumers get the two most commonly needed API-pattern utilities without pulling in a separate dependency
-- Both utilities are version-agnostic generics and work against any version's `components["schemas"]` types
+- Consumers get the three most commonly needed API-pattern utilities without pulling in a separate dependency
+- All three utilities are version-agnostic generics and work against any version's `components["schemas"]` types
 - `GistModel` correctly preserves string enum types (like `AggregationType`) because TypeScript's `object` type excludes string literal unions
+- `PagedResponse` composes naturally with `PickWithFieldFilters` — declare fields once, pass the narrowed type as `T`
 
 ### Negative Consequences
 
@@ -60,12 +64,14 @@ Chosen option: **Include `GistModel` and `PickWithFieldFilters` only**, because 
 
 ## Pros and Cons of the Options
 
-### Include `GistModel` and `PickWithFieldFilters`
+### Include `GistModel`, `PickWithFieldFilters`, and `PagedResponse`
 
-- Good, because both address genuine DHIS2-specific API patterns
+- Good, because all three address genuine DHIS2 API patterns
 - Good, because `GistModel` works correctly regardless of reference style — it transforms whatever type is there
 - Good, because `PickWithFieldFilters` remains useful for flat picks and shallow nesting even with `IdentifiableObject` references
-- Good, because neither is trivial to write correctly: `GistModel` requires careful handling of optional modifiers; `PickWithFieldFilters` requires recursive template literal parsing
+- Good, because neither `GistModel` nor `PickWithFieldFilters` is trivial to write correctly: `GistModel` requires careful handling of optional modifiers; `PickWithFieldFilters` requires recursive template literal parsing
+- Good, because `PagedResponse` provides an immediately familiar return type for every paginated query — the most common fetch pattern in DHIS2 apps
+- Good, because `PagedResponse<T, Key>` composes cleanly: the key serves as both the resource name and the type discriminator
 - Bad, because `PickWithFieldFilters` silently drops deeply nested fields that don't exist on `IdentifiableObject`
 
 ### Include all utilities
@@ -87,8 +93,6 @@ Chosen option: **Include `GistModel` and `PickWithFieldFilters` only**, because 
 - Bad, because `GistModel` and `PickWithFieldFilters` require non-trivial type-level logic that each application currently reimplements independently
 
 ## Why specific utilities were excluded
-
-**`PagedResponse<T, Key>`** — trivially expressible as `{ [K in Key]: T[] } & { pager: Pager }`. No DHIS2-specific type logic. One line that any consumer can write.
 
 **`GistCollectionResponse`, `GistObjectResponse`, `GistApiEndpoints`, `GetGistResponseForReference`** — these model gist link traversal. They are useful with resolved references (where `categoryCombo` is `CategoryCombo`) but add little value when references are `IdentifiableObject`.
 

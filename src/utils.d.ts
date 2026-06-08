@@ -56,6 +56,21 @@ type RecursivePickWithFieldFilter<Model, S extends string> =
         ? Pick<Model, S>
     : never
 
+// ── Internal: Pager ──────────────────────────────────────────────────────────
+
+/**
+ * DHIS2 pager object returned by all list endpoints.
+ * `prevPage` and `nextPage` are only present when adjacent pages exist.
+ */
+type Pager = {
+    page: number
+    pageCount: number
+    total: number
+    pageSize: number
+    prevPage?: string
+    nextPage?: string
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -104,6 +119,35 @@ export type GistModel<T> = {
         ? Extract<T[K], undefined> | string
         : T[K]
 }
+
+/**
+ * Type for a paginated DHIS2 list endpoint response.
+ *
+ * DHIS2 list endpoints return a `pager` object alongside the resource array,
+ * keyed by the resource name (e.g. `dataElements`, `trackedEntities`).
+ *
+ * ```ts
+ * import type { DataElement } from "@dhis2/api-types"
+ * import type { PagedResponse } from "@dhis2/api-types/utils"
+ *
+ * type DataElementsPage = PagedResponse<DataElement, "dataElements">
+ * // → {
+ * //     pager: { page: number; pageCount: number; total: number; pageSize: number }
+ * //     dataElements: DataElement[]
+ * //   }
+ * ```
+ *
+ * Combine with `PickWithFieldFilters` to narrow the item type to exactly the
+ * fields requested:
+ *
+ * ```ts
+ * type DataElementRow = PickWithFieldFilters<DataElement, ["id", "name", "valueType"]>
+ * type DataElementsPage = PagedResponse<DataElementRow, "dataElements">
+ * ```
+ */
+export type PagedResponse<T, Key extends string> = Prettify<
+    { pager: Pager } & { [K in Key]: T[] }
+>
 
 /**
  * Pick fields from a model using DHIS2's `?fields=` filter syntax.

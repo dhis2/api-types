@@ -6,7 +6,7 @@
  */
 
 import type { components } from "@dhis2/api-types/v43"
-import type { GistModel, PickWithFieldFilters } from "@dhis2/api-types/utils"
+import type { GistModel, PickWithFieldFilters, PagedResponse } from "@dhis2/api-types/utils"
 
 type DataElement = components["schemas"]["DataElement"]
 type Event = components["schemas"]["Event"]
@@ -126,6 +126,70 @@ const eventPickBad: EventPick = {
         // @ts-expect-error — createdAt was not in the nested filter
         createdAt: "2024-01-01",
     }],
+}
+
+// ── PagedResponse ──────────────────────────────────────────────────────────────
+
+type DataElementsPage = PagedResponse<DataElement, "dataElements">
+
+// Valid full response — pager + array under the resource key
+const page: DataElementsPage = {
+    pager: { page: 1, pageCount: 10, total: 500, pageSize: 50 },
+    dataElements: [{ aggregationType: "SUM", domainType: "AGGREGATE", valueType: "INTEGER" }],
+}
+
+// Empty page is valid
+const emptyPage: DataElementsPage = {
+    pager: { page: 1, pageCount: 0, total: 0, pageSize: 50 },
+    dataElements: [],
+}
+
+// prevPage and nextPage are optional on pager
+const pageWithLinks: DataElementsPage = {
+    pager: {
+        page: 2,
+        pageCount: 10,
+        total: 500,
+        pageSize: 50,
+        prevPage: "https://play.dhis2.org/api/dataElements?page=1",
+        nextPage: "https://play.dhis2.org/api/dataElements?page=3",
+    },
+    dataElements: [],
+}
+
+// @ts-expect-error — pager is required
+const pageNoPager: DataElementsPage = { dataElements: [] }
+
+// @ts-expect-error — dataElements array is required
+const pageNoData: DataElementsPage = { pager: { page: 1, pageCount: 1, total: 0, pageSize: 50 } }
+
+const pageBadDataElements: DataElementsPage = {
+    pager: { page: 1, pageCount: 1, total: 1, pageSize: 50 },
+    // @ts-expect-error — must be DataElement[], not a plain object
+    dataElements: { id: "abc" },
+}
+
+// Key determines the resource array name — different resources use different keys
+type EventsPage = PagedResponse<Event, "events">
+
+const eventsPage: EventsPage = {
+    pager: { page: 1, pageCount: 5, total: 250, pageSize: 50 },
+    events: [{ status: "ACTIVE" }],
+}
+
+const eventsPageWrongKey: EventsPage = {
+    pager: { page: 1, pageCount: 5, total: 250, pageSize: 50 },
+    // @ts-expect-error — "dataElements" is not the right key for EventsPage
+    dataElements: [],
+}
+
+// PagedResponse composes with PickWithFieldFilters — narrow items to requested fields
+type DataElementRow = PickWithFieldFilters<DataElement, ["id", "name", "valueType"]>
+type DataElementsPickedPage = PagedResponse<DataElementRow, "dataElements">
+
+const pickedPage: DataElementsPickedPage = {
+    pager: { page: 1, pageCount: 2, total: 75, pageSize: 50 },
+    dataElements: [{ id: "fbfJHSPpUQD", name: "ANC 1st visit", valueType: "TEXT" }],
 }
 
 // --- Both array forms are equivalent ---

@@ -10,7 +10,7 @@
 - Every schema in the spec is exported as a named type alias from the version entry point (e.g. `export type DataElement = components["schemas"]["DataElement"]`). These are generated automatically by `generate.ts` and appended to each `vN.d.ts` file. See [ADR 0003](docs/adr/0003-named-schema-type-aliases.md).
 - The last **four** DHIS2 API versions are supported at any time (currently v40–v43).
 - The root export `@dhis2/api-types` always resolves to the latest version via `src/latest.d.ts`.
-- `@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, and `Prettify<T>` — version-agnostic utility types. `src/utils.d.ts` is hand-written and must not be regenerated. See [ADR 0002](docs/adr/0002-utility-types-gistmodel-and-pickwithfieldfilters.md) for why only these three are included.
+- `@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, `PagedResponse<T, Key>`, and `Prettify<T>` — version-agnostic utility types. `src/utils.d.ts` is hand-written and must not be regenerated. See [ADR 0002](docs/adr/0002-utility-types-gistmodel-and-pickwithfieldfilters.md) for why only these are included.
 
 ## Versions
 
@@ -102,13 +102,14 @@ docs/
 
 ## Utility types (`src/utils.d.ts`)
 
-`@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, and `Prettify<T>`. These are version-agnostic generics — a single export that works with types from any version:
+`@dhis2/api-types/utils` exports `GistModel<T>`, `PickWithFieldFilters<T, Filters>`, `PagedResponse<T, Key>`, and `Prettify<T>`. These are version-agnostic generics — a single export that works with types from any version:
 
 ```ts
 import type { components } from "@dhis2/api-types/v40"  // or v41, v42, v43
-import type { GistModel } from "@dhis2/api-types/utils"
+import type { GistModel, PagedResponse } from "@dhis2/api-types/utils"
 
 type DEGist = GistModel<components["schemas"]["DataElement"]>
+type DataElementsPage = PagedResponse<components["schemas"]["DataElement"], "dataElements">
 ```
 
 `src/utils.d.ts` is hand-written. Do not regenerate or overwrite it as part of `npm run generate`. It should be updated manually when the utility types need to change.
@@ -118,6 +119,6 @@ type DEGist = GistModel<components["schemas"]["DataElement"]>
 When adding v44, create `tests/v44/` with at least:
 - `data-element.ts` — test an aggregate metadata type
 - `tracker.ts` — test the tracker event/enrollment types
-- `utils.ts` — verify `GistModel` and `PickWithFieldFilters` compile against the new version's types
+- `utils.ts` — verify `GistModel`, `PickWithFieldFilters`, and `PagedResponse` compile against the new version's types
 
 Also add the new version path to `tsconfig.tests.json`'s `paths` map.

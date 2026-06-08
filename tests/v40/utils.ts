@@ -7,7 +7,7 @@
  */
 
 import type { components } from "@dhis2/api-types/v40"
-import type { GistModel, PickWithFieldFilters } from "@dhis2/api-types/utils"
+import type { GistModel, PickWithFieldFilters, PagedResponse } from "@dhis2/api-types/utils"
 
 type DataElement = components["schemas"]["DataElement"]
 type TrackedEntityInstance = components["schemas"]["TrackedEntityInstance"]
@@ -79,4 +79,31 @@ const withComboBad: DEWithCombo = {
         // @ts-expect-error — name not available on v40's { id: string } categoryCombo type
         name: "default",
     },
+}
+
+// ── PagedResponse with v40 types ───────────────────────────────────────────────
+// PagedResponse is version-agnostic — it works the same against v40 schemas.
+
+type DataElementsPage = PagedResponse<DataElement, "dataElements">
+
+const page: DataElementsPage = {
+    pager: { page: 1, pageCount: 4, total: 200, pageSize: 50 },
+    dataElements: [{ aggregationType: "SUM", domainType: "AGGREGATE", valueType: "INTEGER" }],
+}
+
+// prevPage / nextPage are optional on pager
+const pageWithPrev: DataElementsPage = {
+    pager: { page: 2, pageCount: 4, total: 200, pageSize: 50, prevPage: "/api/dataElements?page=1" },
+    dataElements: [],
+}
+
+// @ts-expect-error — pager is required
+const pageNoPager: DataElementsPage = { dataElements: [] }
+
+// PagedResponse on v40's legacy tracker type
+type TrackedEntityInstancesPage = PagedResponse<TrackedEntityInstance, "trackedEntityInstances">
+
+const teiPage: TrackedEntityInstancesPage = {
+    pager: { page: 1, pageCount: 1, total: 3, pageSize: 50 },
+    trackedEntityInstances: [{ id: "HNTA2BKtnNB" }],
 }
