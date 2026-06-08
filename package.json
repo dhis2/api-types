@@ -6,7 +6,7 @@
     "license": "BSD-2-Clause",
     "repository": {
         "type": "git",
-        "url": "https://github.com/dhis2/dhis2-api-types.git"
+        "url": "git+https://github.com/dhis2/api-types.git"
     },
     "types": "./src/latest.d.ts",
     "exports": {
