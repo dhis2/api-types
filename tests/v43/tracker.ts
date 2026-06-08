@@ -1,18 +1,25 @@
 /**
- * Type tests for tracker models: TrackerTrackedEntity, TrackerEnrollment, Event.
+ * Type tests for tracker models in v43.
  *
- * Tracker types follow the /api/tracker/* endpoints (not the legacy /api/trackedEntityInstances).
+ * v43 uses the modern tracker API (/api/tracker/*):
+ *   TrackerTrackedEntity, TrackerEnrollment, Event
+ * plus supporting types: TrackedEntityType, TrackedEntityAttribute, TrackerRelationship.
+ *
  * TrackerTrackedEntity has no required fields. TrackerEnrollment and Event both
  * require `status`.
  */
 
-import type { components } from "@dhis2/api-types/v43"
-
-type TrackerTrackedEntity = components["schemas"]["TrackerTrackedEntity"]
-type TrackerEnrollment = components["schemas"]["TrackerEnrollment"]
-type Event = components["schemas"]["Event"]
-type EnrollmentStatus = components["schemas"]["EnrollmentStatus"]
-type EventStatus = components["schemas"]["EventStatus"]
+import type {
+    TrackerTrackedEntity,
+    TrackerEnrollment,
+    Event,
+    EnrollmentStatus,
+    EventStatus,
+    TrackedEntityType,
+    TrackedEntityAttribute,
+    TrackerRelationship,
+    ValueType,
+} from "@dhis2/api-types/v43"
 
 // ── TrackerTrackedEntity ──────────────────────────────────────────────────────
 
@@ -82,3 +89,66 @@ const badEs: EnrollmentStatus = "UNKNOWN"
 
 // @ts-expect-error
 const badEvs: EventStatus = "PENDING"
+
+// ── TrackedEntityType ─────────────────────────────────────────────────────────
+// Required: featureType, maxTeiCountToReturn, minAttributesRequiredToSearch
+
+const tet: TrackedEntityType = {
+    featureType: "POINT",
+    maxTeiCountToReturn: 0,
+    minAttributesRequiredToSearch: 1,
+    id: "nEenWmSyUEp",
+    name: "Person",
+}
+
+// @ts-expect-error — featureType is required
+const tetMissing: TrackedEntityType = {
+    maxTeiCountToReturn: 0,
+    minAttributesRequiredToSearch: 1,
+}
+
+const tetBadFeature: TrackedEntityType = {
+    // @ts-expect-error — not a valid FeatureType
+    featureType: "LINE",
+    maxTeiCountToReturn: 0,
+    minAttributesRequiredToSearch: 1,
+}
+
+// ── TrackedEntityAttribute ────────────────────────────────────────────────────
+// Required: aggregationType, minCharactersToSearch, preferredSearchOperator, valueType
+
+const tea: TrackedEntityAttribute = {
+    aggregationType: "NONE",
+    minCharactersToSearch: 2,
+    preferredSearchOperator: "LIKE",
+    valueType: "TEXT",
+    id: "w75KJ2mc4zz",
+    name: "First name",
+}
+
+// @ts-expect-error — valueType is required
+const teaMissing: TrackedEntityAttribute = {
+    aggregationType: "NONE",
+    minCharactersToSearch: 2,
+    preferredSearchOperator: "LIKE",
+}
+
+// valueType is the shared ValueType enum
+const teaValueType: ValueType = "DATE"
+// @ts-expect-error
+const teaValueTypeBad: ValueType = "DECIMAL"
+
+// ── TrackerRelationship ───────────────────────────────────────────────────────
+// No required fields — relationships are fetched as part of entity responses
+
+const rel: TrackerRelationship = {}
+
+const relFull: TrackerRelationship = {
+    relationship: "mfCOxMNjPHO",
+    relationshipType: "TV9oB9LT3sh",
+    from: { trackedEntity: { trackedEntity: "HNTA2BKtnNB" } },
+    to: { trackedEntity: { trackedEntity: "abc123" } },
+}
+
+// @ts-expect-error — relationship UID must be string
+const relBadUid: TrackerRelationship = { relationship: 999 }
