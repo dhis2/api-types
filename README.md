@@ -33,42 +33,31 @@ type DataElementResponse =
 
 ### Usage with `@dhis2/app-runtime`
 
-Type the response of `useDataQuery` by declaring your fields `as const` and passing them through `PickWithFieldFilters`. The same array drives both the TypeScript type and the `fields` query parameter, so they can never drift apart.
+Type the response of `useDataQuery` by building the result type from `PickWithFieldFilters` and `PagedResponse`, then passing it as the explicit generic. Declare fields `as const` — the same array drives both the TypeScript type and the `fields` query parameter, so they can never drift apart.
 
 ```ts
 import { useDataQuery } from "@dhis2/app-runtime"
 import type { DataElement } from "@dhis2/api-types"
 import type { PickWithFieldFilters, PagedResponse } from "@dhis2/api-types/utils"
 
-// Declare fields once — used for both the type and the ?fields= param
 const DATA_ELEMENT_FIELDS = [
     "id",
     "name",
     "valueType",
-    "domainType",
     "categoryCombo[id,displayName]",
 ] as const
 
-// Shape of a single data element in the response
 type DataElementRow = PickWithFieldFilters<DataElement, typeof DATA_ELEMENT_FIELDS>
 // → {
 //     id?: string
 //     name?: string
 //     valueType?: ValueType
-//     domainType?: DataElementDomain
 //     categoryCombo?: { id?: string; displayName?: string }
 //   }
 
-// Full query response — PagedResponse types the pager + resource array together
 type DataElementsQueryResult = {
     dataElements: PagedResponse<DataElementRow, "dataElements">
 }
-// → {
-//     dataElements: {
-//         pager: { page: number; pageCount: number; total: number; pageSize: number }
-//         dataElements: DataElementRow[]
-//     }
-//   }
 
 const query = {
     dataElements: {
@@ -86,7 +75,6 @@ function DataElementList() {
     return (
         <ul>
             {data?.dataElements.dataElements.map((de) => (
-                // de.id, de.name, de.valueType, de.categoryCombo are all typed
                 <li key={de.id}>
                     {de.name} — {de.valueType} ({de.categoryCombo?.displayName})
                 </li>
@@ -94,6 +82,91 @@ function DataElementList() {
         </ul>
     )
 }
+```
+
+### Integrating `InferQueryResult` into `@dhis2/app-runtime`
+
+> This section is for app-runtime maintainers. Once the integration is in place, consumers get accurate response types automatically with no explicit type annotations.
+
+`InferQueryResult` and `DeriveResourceTypeMap` are designed to be used inside `useDataQuery`'s type signature, so that the hook infers its return type from the query object itself. The query must be passed `as const` for field narrowing to work (fields must be literal string arrays, not `string[]`).
+
+**Proposed `useDataQuery` signature:**
+
+```ts
+import type { paths as LatestPaths } from "@dhis2/api-types"
+import type { DeriveResourceTypeMap, InferQueryResult } from "@dhis2/api-types/utils"
+
+// Pre-compute the default map at module level — derived once, not per-call
+type DefaultMap = DeriveResourceTypeMap<LatestPaths>
+
+declare function useDataQuery<
+    Q extends Record<string, { resource: string }>,
+    TResult = InferQueryResult<Q, DefaultMap>
+>(query: Q, options?: UseDataQueryOptions): UseDataQueryResult<TResult>
+```
+
+**Consumer experience after the integration — no explicit types needed:**
+
+```ts
+const { data } = useDataQuery({
+    dataElements: {
+        resource: "dataElements",
+        params: { fields: ["id", "name", "valueType"] as const },
+    },
+} as const)
+
+// data is fully typed automatically:
+// data.dataElements.pager       → Pager
+// data.dataElements.dataElements[0].valueType  → ValueType (enum)
+```
+
+**Targeting a specific DHIS2 API version:**
+
+Consumers running against an older DHIS2 instance can pass an explicit `TResult` built from the right version's paths:
+
+```ts
+import type { paths } from "@dhis2/api-types/v42"
+import type { DeriveResourceTypeMap, InferQueryResult } from "@dhis2/api-types/utils"
+
+const query = {
+    dataElements: {
+        resource: "dataElements",
+        params: { fields: ["id", "name"] as const },
+    },
+} as const
+
+type Result = InferQueryResult<typeof query, DeriveResourceTypeMap<paths>>
+const { data } = useDataQuery<typeof query, Result>(query)
+```
+
+**Overriding the inferred type (escape hatch):**
+
+Pass an explicit `TResult` to opt out of inference entirely — useful for resources not in the auto-derived map, or when the inferred type needs to be widened:
+
+```ts
+type MyResult = {
+    dataElements: {
+        pager: { page: number; pageCount: number; total: number; pageSize: number }
+        dataElements: MyCustomDataElement[]
+    }
+}
+const { data } = useDataQuery<typeof query, MyResult>(query)
+```
+
+**Tracker resources:**
+
+Tracker endpoints return opaque types in the spec and are not included in the default map — queries for tracker resources resolve to `unknown`. To type them, extend the map:
+
+```ts
+import type { paths, TrackerEnrollment } from "@dhis2/api-types"
+import type { DeriveResourceTypeMap, InferQueryResult } from "@dhis2/api-types/utils"
+
+type TrackerMap = DeriveResourceTypeMap<paths> & {
+    "tracker/enrollments": TrackerEnrollment
+}
+
+// App-runtime could expose TrackerMap (or accept a custom map) for tracker queries
+type Result = InferQueryResult<typeof query, TrackerMap>
 ```
 
 Pair with [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) for fully type-safe API calls:
@@ -112,6 +185,18 @@ const { data } = await client.GET("/dataElements", {
 ## Utility types
 
 Import from `@dhis2/api-types/utils` for version-agnostic helpers that work with any version's schemas.
+
+### `DeriveResourceTypeMap<P>`
+
+Auto-derives a resource-name → item-type map from an OpenAPI `paths` type. Used internally by `@dhis2/app-runtime` to power `useDataQuery`'s return type inference. Inspects every `GET /resource/` and `GET /api/resource/` endpoint and maps the resource name to the item element type in its paginated response body.
+
+Tracker endpoints return opaque types in the spec and are excluded — their item type cannot be derived automatically. See the [app-runtime integration section](#integrating-inferqueryresult-into-dhis2app-runtime) for how to supplement the map with tracker types.
+
+### `InferQueryResult<Q, Map>`
+
+Infers the full `PagedResponse`-shaped result type for an app-runtime query object given a resource map. Used internally by `@dhis2/app-runtime`; see the [app-runtime integration section](#integrating-inferqueryresult-into-dhis2app-runtime) for usage patterns including version targeting and type overrides.
+
+For field narrowing to work, `fields` must be a `readonly string[]` literal (`as const`) — `.join(",")` erases the literal type and disables narrowing.
 
 ### `PagedResponse<T, Key>`
 

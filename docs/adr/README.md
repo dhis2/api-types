@@ -9,3 +9,4 @@ This directory contains ADRs for `@dhis2/api-types`, following the
 | [ADR-0002](0002-utility-types-gistmodel-and-pickwithfieldfilters.md) | Ship GistModel and PickWithFieldFilters utility types; omit the rest | Accepted |
 | [ADR-0003](0003-named-schema-type-aliases.md)                        | Generate named schema type aliases alongside the namespace output    | Accepted |
 | [ADR-0004](0004-overriding-and-patching-spec-errors.md)              | Overriding and patching OpenAPI spec errors                          | Accepted |
+| [ADR-0005](0005-query-type-inference-with-deriveresourcetypemap.md)  | Derive query response types with DeriveResourceTypeMap and InferQueryResult | Accepted |
