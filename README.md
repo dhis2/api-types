@@ -275,23 +275,25 @@ type EventPick = PickWithFieldFilters<
 
 ## Versioning
 
-The package major version tracks the latest included DHIS2 API version. When DHIS2 v44 ships:
+The package follows [semantic versioning](https://semver.org/) independently of the DHIS2 API version. When DHIS2 v44 ships:
 - `v44` is added, `v40` is dropped
-- Package version bumps to `44.x.y`
+- A `minor` (or `major` if there are breaking changes) changeset is added
 
-Pin to a major version to avoid unexpected API version drops:
+The package uses [Changesets](https://github.com/changesets/changesets) and [conventional commits](https://www.conventionalcommits.org/) — see [Contributing](#contributing) below.
 
-```json
-"@dhis2/api-types": "^43.0.0"
-```
+## Contributing
+
+Commits must follow the [conventional commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, `chore:`, etc.). This is enforced locally via a `commit-msg` hook (run `npm install` to activate it) and verified in CI on every PR.
 
 ## Maintaining this package
 
 ### Prerequisites
 
 Secrets required in GitHub Actions:
-- `NPM_TOKEN` — npm publish token with access to the `@dhis2` org
+- `DHIS2_BOT_NPM_TOKEN` — npm publish token with write access to the `@dhis2` org
 - `DHIS2_USERNAME` / `DHIS2_PASSWORD` — credentials for the DHIS2 Play servers (defaults: `admin` / `district`)
+
+`GITHUB_TOKEN` is provided automatically by Actions and needs `contents: write` and `issues: write` permissions (set in `release.yml`).
 
 ### Updating types
 
@@ -313,60 +315,23 @@ npm run generate -- --version v42
 
 ### Publishing
 
-The publish workflow runs on two triggers, intentionally different:
+Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/). Merging to `main` analyzes the commits since the last release, determines the version bump, publishes to npm, and commits an updated `CHANGELOG.md`.
 
-**Stable releases — tag-based, manual.**
-Pushing a `v*` tag from any branch publishes to the `latest` dist-tag on npm. The version in `package.json` is used as-is. This requires a deliberate action, which is the point — stable releases affect everyone who runs `npm install @dhis2/api-types` and should never happen by accident.
-
-```sh
-# Bump the version, commit, then tag and push
-npm version patch          # or minor / major
-git push && git push --tags
-```
-
-**Prerelease channels — branch-based, automatic.**
-Any push to the `beta` or `alpha` branches immediately publishes to the matching dist-tag on npm. The version is auto-generated as `{base}-{channel}.{short-sha}` (e.g. `43.0.0-beta.abc1f3a`) so every commit produces a unique, traceable package version without any manual version management.
+- `fix:` → patch, `feat:` → minor, `feat!:` / `BREAKING CHANGE:` → major
+- Merging to `beta` or `alpha` publishes a pre-release (e.g. `1.2.0-beta.1`)
 
 ```sh
-# Make changes on the beta branch — publishing is automatic on push
-git checkout beta
-git merge my-feature-branch
-git push
-# → publishes 43.0.0-beta.abc1f3a to npm@beta
+npm install @dhis2/api-types          # latest stable
+npm install @dhis2/api-types@beta     # latest beta
+npm install @dhis2/api-types@alpha    # latest alpha
 ```
 
-Consumers opt into a channel explicitly:
-
-```sh
-npm install @dhis2/api-types          # stable, unaffected by prerelease activity
-npm install @dhis2/api-types@beta     # latest beta build
-npm install @dhis2/api-types@alpha    # latest alpha build
-```
-
-**Why this split is a good compromise.**
-Stable releases carry real weight — a bad publish to `latest` breaks every downstream project that runs `npm install`. Tag-based publishing forces a deliberate decision: someone has to run `git tag`, review what they're shipping, and push the tag intentionally. That friction is a feature, not a bug.
-
-Prerelease channels are the opposite: speed and low ceremony matter more than caution. A branch-based trigger means merging a PR to `beta` is all it takes to make types available for integration testing — no context-switching to create a tag, no deciding on a prerelease version number. The SHA-stamped version also means you can always trace a `@beta` install back to the exact commit it came from.
-
-The result: `latest` stays stable and trustworthy, while `beta` and `alpha` move fast and stay current with in-progress work.
-
-### Releasing a new stable version
-
-1. Run `npm run update` and review the diff in `specs/` and `src/`
-2. Bump the version in `package.json` (`npm version patch|minor|major`)
-3. Commit, push, then tag:
-
-```sh
-git push && git push --tags
-```
-
-The regenerate workflow also runs monthly on a schedule and opens a PR automatically
-if any specs have changed.
+The `regenerate.yml` workflow runs monthly and opens a PR automatically if any specs have changed. The PR commit uses `fix:` by default — change it to `feat:` before merging if new types were added.
 
 ### Adding a new DHIS2 API version
 
 1. Add an entry to `scripts/versions.ts`
 2. Add the new version to `package.json` exports and `typesVersions`; remove the oldest
 3. Update `src/latest.d.ts` to re-export the new version
-4. Update the publish workflow's type check list
+4. Update the type existence check in `.github/workflows/release.yml`
 5. Run `npm run update`

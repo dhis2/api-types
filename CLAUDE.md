@@ -14,15 +14,23 @@
 
 ## Versions
 
-Supported versions and their spec URLs are in [scripts/versions.ts](scripts/versions.ts). The package version major tracks the latest DHIS2 version (currently `43.x.y`).
+Supported versions and their spec URLs are in [scripts/versions.ts](scripts/versions.ts). The package version follows semver independently of the DHIS2 version (starts at `0.x.y`).
 
 ### Adding a new DHIS2 version
 
 1. Add an entry to `scripts/versions.ts`
 2. Add the new version to `package.json` `exports` and `typesVersions`; remove the oldest
 3. Update `src/latest.d.ts` to re-export the new version
-4. Update the file existence check in `.github/workflows/publish.yml`
+4. Update the file existence check in `.github/workflows/release.yml`
 5. Run `npm run update`
+
+## Releases and versioning
+
+This project uses [semantic-release](https://semantic-release.gitbook.io/) and [conventional commits](https://www.conventionalcommits.org/). Merging to `main` automatically determines the version bump from commit types and publishes to npm. No manual version management needed.
+
+- `fix:` → patch, `feat:` → minor, `feat!:` / `BREAKING CHANGE:` → major
+- Merging to `beta` or `alpha` publishes a pre-release (e.g. `1.2.0-beta.1`)
+- `CHANGELOG.md` and `package.json` are updated automatically via a `[skip ci]` commit
 
 ## npm scripts
 
@@ -96,7 +104,8 @@ docs/
   adr/               # Architecture Decision Records (MADR format)
 .github/
   workflows/
-    publish.yml      # publishes to npm on a vN.N.N tag
+    release.yml      # semantic-release: auto-versions and publishes on merge to main/beta/alpha
+    verify.yml       # CI checks: typecheck + conventional commit lint on PRs
     regenerate.yml   # monthly cron: re-fetches specs and opens a PR if anything changed
 ```
 

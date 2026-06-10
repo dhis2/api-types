@@ -1,0 +1,51 @@
+name: Release
+
+on:
+    push:
+        branches:
+            - main
+            - beta
+            - alpha
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
+            id-token: write
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - run: npm ci
+
+            - name: Verify generated types exist
+              run: |
+                  for f in src/v40.d.ts src/v41.d.ts src/v42.d.ts src/v43.d.ts; do
+                    if [ ! -f "$f" ]; then
+                      echo "Missing: $f — run 'npm run update' and commit"
+                      exit 1
+                    fi
+                  done
+
+            - run: npm run typecheck
+
+            - name: Release
+              run: npx semantic-release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_TOKEN: ${{ secrets.DHIS2_BOT_NPM_TOKEN }}

@@ -69,13 +69,13 @@ jobs:
               with:
                   token: ${{ secrets.GITHUB_TOKEN }}
                   branch: regenerate/api-types
-                  commit-message: "chore: regenerate types from latest OpenAPI specs"
-                  title: "chore: regenerate types from latest OpenAPI specs"
+                  commit-message: "fix: regenerate types from latest OpenAPI specs"
+                  title: "fix: regenerate types from latest OpenAPI specs"
                   body: |
                       Automated regeneration of TypeScript types from the DHIS2 OpenAPI specs.
 
                       **What changed**: Review the diff in `specs/` and `src/` to see API changes.
 
-                      If any types changed, review them carefully before merging — this will affect
-                      downstream consumers. Bump the package version as appropriate.
+                      If any types changed, review them carefully before merging. Change the commit
+                      type to `feat` if the update adds new types.
                   labels: "automated,types"

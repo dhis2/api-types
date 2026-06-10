@@ -1,66 +1,73 @@
 {
-    "name": "@dhis2/api-types",
-    "version": "43.0.0",
-    "description": "TypeScript types for the DHIS2 REST API, generated from the OpenAPI specification",
-    "type": "module",
-    "license": "BSD-2-Clause",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/dhis2/api-types.git"
+  "name": "@dhis2/api-types",
+  "version": "0.0.0",
+  "description": "TypeScript types for the DHIS2 REST API, generated from the OpenAPI specification",
+  "type": "module",
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dhis2/api-types.git"
+  },
+  "types": "./src/latest.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/latest.d.ts"
     },
-    "types": "./src/latest.d.ts",
-    "exports": {
-        ".": {
-            "types": "./src/latest.d.ts"
-        },
-        "./v40": {
-            "types": "./src/v40.d.ts"
-        },
-        "./v41": {
-            "types": "./src/v41.d.ts"
-        },
-        "./v42": {
-            "types": "./src/v42.d.ts"
-        },
-        "./v43": {
-            "types": "./src/v43.d.ts"
-        },
-        "./utils": {
-            "types": "./src/utils.d.ts"
-        }
+    "./v40": {
+      "types": "./src/v40.d.ts"
     },
-    "typesVersions": {
-        "*": {
-            "v40": [
-                "./src/v40.d.ts"
-            ],
-            "v41": [
-                "./src/v41.d.ts"
-            ],
-            "v42": [
-                "./src/v42.d.ts"
-            ],
-            "v43": [
-                "./src/v43.d.ts"
-            ],
-            "utils": [
-                "./src/utils.d.ts"
-            ]
-        }
+    "./v41": {
+      "types": "./src/v41.d.ts"
     },
-    "files": [
-        "src"
-    ],
-    "scripts": {
-        "fetch-specs": "tsx scripts/fetch-specs.ts",
-        "generate": "tsx scripts/generate.ts",
-        "update": "npm run fetch-specs && npm run generate",
-        "typecheck": "tsc --noEmit && tsc -p tsconfig.tests.json"
+    "./v42": {
+      "types": "./src/v42.d.ts"
     },
-    "devDependencies": {
-        "@types/node": "^25.9.1",
-        "openapi-typescript": "^7.6.1",
-        "tsx": "^4.19.4",
-        "typescript": "^5.8.3"
+    "./v43": {
+      "types": "./src/v43.d.ts"
+    },
+    "./utils": {
+      "types": "./src/utils.d.ts"
     }
+  },
+  "typesVersions": {
+    "*": {
+      "v40": [
+        "./src/v40.d.ts"
+      ],
+      "v41": [
+        "./src/v41.d.ts"
+      ],
+      "v42": [
+        "./src/v42.d.ts"
+      ],
+      "v43": [
+        "./src/v43.d.ts"
+      ],
+      "utils": [
+        "./src/utils.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "fetch-specs": "tsx scripts/fetch-specs.ts",
+    "generate": "tsx scripts/generate.ts",
+    "update": "npm run fetch-specs && npm run generate",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.tests.json",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "husky": "^9.1.7",
+    "semantic-release": "^24.2.5",
+    "openapi-typescript": "^7.6.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
 }
