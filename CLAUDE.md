@@ -14,15 +14,31 @@
 
 ## Versions
 
-Supported versions and their spec URLs are in [scripts/versions.ts](scripts/versions.ts). The package version major tracks the latest DHIS2 version (currently `43.x.y`).
+Supported versions and their spec URLs are in [scripts/versions.ts](scripts/versions.ts). The package version follows semver independently of the DHIS2 version (starts at `0.x.y`).
 
 ### Adding a new DHIS2 version
 
 1. Add an entry to `scripts/versions.ts`
 2. Add the new version to `package.json` `exports` and `typesVersions`; remove the oldest
 3. Update `src/latest.d.ts` to re-export the new version
-4. Update the file existence check in `.github/workflows/publish.yml`
+4. Update the file existence check in `.github/workflows/release.yml`
 5. Run `npm run update`
+
+## Releases and versioning
+
+This project uses [Changesets](https://github.com/changesets/changesets) for version management and [conventional commits](https://www.conventionalcommits.org/) for commit messages.
+
+### Workflow
+
+1. Make commits following the conventional commits format (`feat:`, `fix:`, `chore:`, etc.)
+2. Add a changeset describing the change: `npx changeset add` — or generate one from your commits: `npx changeset-conventional-commits`
+3. Open a PR; CI will verify a changeset is present
+4. When merged to `main`, the [changesets/action](https://github.com/changesets/action) opens a "Version Packages" PR that bumps the version and updates `CHANGELOG.md`
+5. Merging that PR publishes to npm automatically
+
+### Pre-releases
+
+Push to the `beta` or `alpha` branch to publish pre-release versions. Enter pre-release mode first: `npx changeset pre enter beta`.
 
 ## npm scripts
 
@@ -31,10 +47,17 @@ npm run fetch-specs              # fetch OpenAPI specs from DHIS2 Play servers �
 npm run generate                 # generate types from specs → src/vN.d.ts
 npm run update                   # fetch-specs + generate (full refresh)
 npm run typecheck                # tsc check on scripts + type tests
+npm run release                  # publish packages (used by CI via changesets/action)
 
 # Target a single version
 npm run fetch-specs -- --version v43 --force
 npm run generate -- --version v43
+
+# Changesets
+npx changeset add                # add a changeset manually
+npx changeset-conventional-commits  # generate changesets from conventional commits
+npx changeset version            # bump versions (done by CI)
+npx changeset publish            # publish to npm (done by CI via npm run release)
 ```
 
 ## Spec patching
@@ -94,9 +117,12 @@ tests/
     utils.ts         # type tests for GistModel and PickWithFieldFilters
 docs/
   adr/               # Architecture Decision Records (MADR format)
+.changeset/
+  config.json        # changesets configuration
 .github/
   workflows/
-    publish.yml      # publishes to npm on a vN.N.N tag
+    release.yml      # changesets/action: opens Version Packages PR or publishes to npm
+    verify.yml       # CI checks: typecheck, changeset present, conventional commits
     regenerate.yml   # monthly cron: re-fetches specs and opens a PR if anything changed
 ```
 
