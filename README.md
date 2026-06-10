@@ -283,25 +283,17 @@ The package uses [Changesets](https://github.com/changesets/changesets) and [con
 
 ## Contributing
 
-Commits must follow the [conventional commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, `chore:`, etc.). This is enforced locally via a `commit-msg` hook (run `npm install` to activate it) and verified in CI.
-
-Every PR must include a [changeset](https://github.com/changesets/changesets):
-
-```sh
-# Add a changeset describing your change
-npx changeset add
-
-# Or generate one automatically from your conventional commits
-npx changeset-conventional-commits
-```
+Commits must follow the [conventional commits](https://www.conventionalcommits.org/) format (`feat:`, `fix:`, `chore:`, etc.). This is enforced locally via a `commit-msg` hook (run `npm install` to activate it) and verified in CI on every PR.
 
 ## Maintaining this package
 
 ### Prerequisites
 
 Secrets required in GitHub Actions:
-- `DHIS2_BOT_NPM_TOKEN` — npm publish token with access to the `@dhis2` org
+- `DHIS2_BOT_NPM_TOKEN` — npm publish token with write access to the `@dhis2` org
 - `DHIS2_USERNAME` / `DHIS2_PASSWORD` — credentials for the DHIS2 Play servers (defaults: `admin` / `district`)
+
+`GITHUB_TOKEN` is provided automatically by Actions and needs `contents: write` and `issues: write` permissions (set in `release.yml`).
 
 ### Updating types
 
@@ -323,11 +315,10 @@ npm run generate -- --version v42
 
 ### Publishing
 
-Releases are managed with [Changesets](https://github.com/changesets/changesets). When a PR with a changeset is merged to `main`, the `release.yml` workflow either:
-- Opens a **"Version Packages"** PR that bumps the version and updates `CHANGELOG.md`, or
-- **Publishes to npm** automatically when that PR is merged
+Releases are fully automated via [semantic-release](https://semantic-release.gitbook.io/). Merging to `main` analyzes the commits since the last release, determines the version bump, publishes to npm, and commits an updated `CHANGELOG.md`.
 
-Pushing to the `beta` or `alpha` branches triggers the same flow for pre-release channels:
+- `fix:` → patch, `feat:` → minor, `feat!:` / `BREAKING CHANGE:` → major
+- Merging to `beta` or `alpha` publishes a pre-release (e.g. `1.2.0-beta.1`)
 
 ```sh
 npm install @dhis2/api-types          # latest stable
@@ -335,7 +326,7 @@ npm install @dhis2/api-types@beta     # latest beta
 npm install @dhis2/api-types@alpha    # latest alpha
 ```
 
-The `regenerate.yml` workflow runs monthly on a schedule and opens a PR automatically (with a changeset included) if any specs have changed.
+The `regenerate.yml` workflow runs monthly and opens a PR automatically if any specs have changed. The PR commit uses `fix:` by default — change it to `feat:` before merging if new types were added.
 
 ### Adding a new DHIS2 API version
 

@@ -25,10 +25,6 @@ jobs:
 
             - run: npm run typecheck
 
-            - name: Check changeset added
-              if: ${{ github.event.pull_request.base.ref != '' }}
-              run: npx changeset status --since=origin/${{ github.event.pull_request.base.ref }}
-
     lint-commits:
         name: Lint commits
         runs-on: ubuntu-latest

@@ -56,16 +56,16 @@
     "generate": "tsx scripts/generate.ts",
     "update": "npm run fetch-specs && npm run generate",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.tests.json",
-    "release": "changeset publish",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.7",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^25.9.1",
-    "changeset-conventional-commits": "^0.2.5",
     "husky": "^9.1.7",
+    "semantic-release": "^24.2.5",
     "openapi-typescript": "^7.6.1",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
