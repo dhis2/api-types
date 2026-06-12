@@ -4,10 +4,7 @@
   "description": "TypeScript types for the DHIS2 REST API, generated from the OpenAPI specification",
   "type": "module",
   "license": "BSD-2-Clause",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dhis2/api-types.git"
-  },
+  "repository": "https://github.com/dhis2/api-types.git",
   "types": "./src/latest.d.ts",
   "exports": {
     ".": {
