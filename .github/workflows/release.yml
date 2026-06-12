@@ -58,8 +58,5 @@ jobs:
 
       - run: npm run typecheck
 
-      - name: Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
-          NPM_TOKEN: ${{ env.NPM_TOKEN }}
+      - name: Publish to NPM
+        run: npx @dhis2/cli-utils release --publish npm
