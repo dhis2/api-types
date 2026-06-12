@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{env.GH_TOKEN}}
 
       - uses: dhis2/action-commit-signing@v1
         with:
