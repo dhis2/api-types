@@ -7,6 +7,15 @@ on:
       - beta
       - alpha
 
+env:
+  GIT_AUTHOR_NAME: "@dhis2-bot"
+  GIT_AUTHOR_EMAIL: "apps@dhis2.org"
+  GIT_COMMITTER_NAME: "@dhis2-bot"
+  GIT_COMMITTER_EMAIL: "apps@dhis2.org"
+  NPM_TOKEN: ${{secrets.DHIS2_BOT_NPM_TOKEN}}
+  GH_TOKEN: ${{secrets.DHIS2_BOT_GITHUB_TOKEN}}
+  CI: true
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
@@ -52,5 +61,5 @@ jobs:
       - name: Release
         run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.DHIS2_BOT_NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
+          NPM_TOKEN: ${{ env.NPM_TOKEN }}
