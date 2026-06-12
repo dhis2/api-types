@@ -35,15 +35,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
       - uses: dhis2/action-commit-signing@v1
         with:
           ssh-signing-key: ${{ secrets.DHIS2_BOT_SSH_SIGNING_KEY }}
           ssh-signing-key-passphrase: ${{ secrets.DHIS2_BOT_SSH_SIGNING_PASSPHRASE }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
       - run: npm ci
 
